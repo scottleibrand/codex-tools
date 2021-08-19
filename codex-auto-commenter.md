@@ -52,7 +52,7 @@ Once all functions have been commented, write out the resulting file, either to 
 ## Appendix 1 - Example Codex input/output
 
 Auto-commenting https://github.com/openaps/oref0/blob/dev/bin/get_profile.py
-
+```
 #!/usr/bin/env python
 """
 Module to ease work with nightscout profiles.
@@ -401,3 +401,4 @@ def normalize_entry(entry):
 
 
 
+```
