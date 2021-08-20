@@ -66,7 +66,8 @@ def main():
     for function in functions:
         print("Processing function {}".format(function))
         code_before_function = re.search(r'^.*{}\('.format(function), code, re.MULTILINE).group(0)
-        prompt = code_before_function + '\n# With inline comments\n' + function + '('
+        prompt = code_before_function + '\n    # With inline comments\n' + function + '('
+        print(prompt)
         response = requests.post('https://api.openai.com/v1/engines/davinci-codex/completions',
             headers={
                 'Content-Type': 'application/json',
