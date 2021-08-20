@@ -52,190 +52,104 @@ import sys
 GPT_API_KEY = os.environ['GPT_API_KEY']
 
 """
-List of all the functions called by main():
+The algorithm above should be divided into modular functions. The top-level functions are:
 
-def get_code(filename):
-    Read in the code to be processed from a provided filename or from stdin.
-
-def get_functions(code):
-    Find all defined functions.
-
-def split_code(code):
-    Split the code as follows:
-        - code prior to the first function (top code)
-        - each function's definition line 
-        - each function's code
-        - code after the end of the last function (bottom code)
+- read_code_from_file
+- get_functions
+- get_function_code
+- get_function_definition
+- construct_prompt
+- call_codex
+- process_functions
 """
 
 
-def get_code(filename):
-    """Read in the code to be processed from a provided filename or from stdin."""
-
-    if filename:
-        with open(filename, 'r') as f:
-            code = f.read()
-
-    else:
-        print('Reading from stdin...')
-
-        # read in all lines from stdin, then join them into one string. This is done because sys.stdin.read() returns a list of lines.
-        code = ''.join(sys.stdin.readlines())
-
-    return code
+def read_code_from_file(filename):
+    """Read the code to be processed from a file"""
+    with open(filename, 'r') as f:
+        return f.read()
 
 
 def get_functions(code):
-    """Find all defined functions."""
-
-    # find all function definitions, which look like: 'def <function name>():' and return a list of them.
-    functions = re.findall(r'def\s+([a-zA-Z0-9_]+)\s*\(\s*\)\s*:', code)
-
-    return functions
+    """Find all defined functions in the code"""
+    return re.findall(r'def\s+([a-zA-Z0-9_]+)\s*\(.*?\)\s*:', code, re.DOTALL)
 
 
-def split_code(code):
-    """Split the code as follows:
-
-        - code prior to the first function (top code)
-        - each function's definition line 
-        - each function's code
-        - code after the end of the last function (bottom code)"""
-
-    # find all function definitions, which look like: 'def <function name>():' and return a list of them. This is used to find the start and end of each function's code block.
-    functions = get_functions(code)
-
-    # find the index of the first function in the code.
-    start_index = code.find('def ' + functions[0] + '():')
-
-    # find the index of the last function in the code.
-    end_index = code.rfind('def ' + functions[-1] + '():')
-
-    # split the code into top, functions, and bottom.
-    top = code[:start_index]
-    bottom = code[end_index:]
-
-    # split each function into definition and code.
-    functions = [f.split('\n') for f in functions]
-
-    # split each function's definition line from its code.
-    for i, f in enumerate(functions):
-        f[0] = f[0].replace('def ', '').replace(':', '')
-        f[1:] = '\n'.join(f[1:]).split('\n')
-
-    # split each function's code from the next function's definition line.
-    for i, f in enumerate(functions):
-        if i < len(functions) - 1:
-            f[1:] = '\n'.join(f[1:]).split('\n' + functions[i + 1][0])
-
-        else:
-            f[1:] = '\n'.join(f[1:]).split('\n' + bottom)
-
-        """
-        # remove any empty lines at the end of each function's code block.
-        while not f[-1]:
-            del f[-1]
-
-        # remove any empty lines at the start of each function's code block.
-        while not f[1]:
-            del f[1]
-
-        # remove any empty lines between each function's definition line and its code block.
-        while not f[2]:
-            del f[2]
-        """
-
-    return top, functions, bottom
+def get_function_code(function, code):
+    """Get the code for a function"""
+    return re.search(r'def\s+{}\s*\(.*?\)\s*:((?:.|\n)*?)\n\s*return'.format(function), code, re.DOTALL).group(1)
 
 
-def construct_prompt(function):
-    """Construct a Codex prompt consisting of:
+def get_function_definition(function, code):
+    """Get the definition line for a function"""
+    return re.search(r'def\s+{}\s*\((.*?)\)\s*:'.format(function), code).group(0)
 
-        - the function's definition line
-        - the function's code
-        - the comment '\n# With verbose inline comments\n'
-        - a repeat of the function definition line, and
-        - an indented comment line without a trailing newline ('    #'):
 
-        Use Temperature 0, with a Stop sequence of def, to make Codex stop after it finishes generating the commented function."""
-
-    # construct the prompt by joining together all the parts.
-    prompt = '\n'.join(function) + '\n# With verbose inline comments\n' + function[0] + '\n    #'
+def construct_prompt(definition, code, verbose=True):
+    """Construct a prompt for a function"""
+    prompt = definition + '\n' + code + '\n' + ('# With verbose inline comments\n' if verbose else '') + definition + '\n' + ('    #' if verbose else '') + '\n'
 
     return prompt
 
 
 def call_codex(prompt):
-    """Call the Codex API with the constructed prompt using the user’s GTP_API_KEY. API calls look like:
+    """Call the Codex API with the constructed prompt"""
 
-        ```
-        data = json.dumps({
-            "prompt": prompt,
-            "max_tokens": 1500,
-            "temperature": 0,
-            "stop": "def "
-        })
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer {}'.format(GPT_API_KEY)
-        }
-        response = requests.post('https://api.openai.com/v1/engines/davinci-codex/completions', headers=headers, data=data)
-        ```
-     """
-
-    # construct the data to be sent to the API.
     data = json.dumps({
         "prompt": prompt,
         "max_tokens": 1500,
         "temperature": 0,
         "stop": "def "
     })
-
-    # construct the headers to be sent to the API.
     headers = {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer {}'.format(GPT_API_KEY)
     }
-
-    # send the request to the API.
     response = requests.post('https://api.openai.com/v1/engines/davinci-codex/completions', headers=headers, data=data)
 
-    # return the response from the API.
     return response
 
 
-def process_code(code):
-    """Process the code by:
+def process_functions(code):
+    """Process all functions in the code"""
 
-        - splitting it into top, functions, and bottom;
-        - constructing a Codex prompt for each function; and
-        - calling the Codex API with each prompt."""
+    functions = get_functions(code)
 
-    # split the code into top, functions, and bottom.
-    top, functions, bottom = split_code(code)
+    for function in functions:
+        print('Processing {}'.format(function))
+        function_code = get_function_code(function, code)
+        function_definition = get_function_definition(function, code)
 
-    # construct a Codex prompt for each function.
-    prompts = [construct_prompt(f) for f in functions]
+        prompt = construct_prompt(function_definition, function_code)
+        print(prompt)
 
-    # call the Codex API with each prompt.
-    responses = [call_codex(p) for p in prompts]
+        response = call_codex(prompt)
 
-    # return all of the responses from the API calls.
-    return responses
+        if response.status_code == 200:
+            print('Successfully processed {}'.format(function))
+            print('Response: {}'.format(response.json()))
 
+            # Replace the original function with the commented one, move on to the next function, and repeat the same process.
 
-def main():
-    """Read in the code to be processed from a provided filename or from stdin."""
+            # TODO: This is a hacky way to do this. It would be better to replace the function definition line with the commented version.
+            code = re.sub(r'def\s+{}\s*\(.*?\)\s*:'.format(function), '# def {}('.format(function), code) + response.json()['choices'][0]['text'] + '\n' + re.search(r'def\s+{}\s*\(.*?\)\s*:'.format(function), code).group(0) + '\n'
+            print(code)
 
-    # read in the code to be processed from a provided filename or from stdin.
-    code = get_code(sys.argv[1] if len(sys.argv) > 1 else None)
-
-    # process the code by: splitting it into top, functions, and bottom; constructing a Codex prompt for each function; and calling the Codex API with each prompt.
-    responses = process_code(code)
-
-    # print out all of the responses from the API calls. This is just for debugging purposes and can be removed later.
-    print('\n'.join([r.text for r in responses]))
+    return code
 
 
 if __name__ == '__main__':
-    main()
+    if len(sys.argv) > 1:
+        filename = sys.argv[1]
+        code = read_code_from_file(filename)
+    else:
+        code = sys.stdin.read()
+
+    processed_code = process_functions(code)
+
+    print('Processed code:\n{}'.format(processed_code))
+
+    # If processing a file, write the processed code to a .new copy of the original file.
+    if len(sys.argv) > 1:
+        with open(filename + '.new', 'w') as f:
+            f.write(processed_code)
