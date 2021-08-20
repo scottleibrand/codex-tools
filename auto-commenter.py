@@ -4,6 +4,7 @@ Script to automatically add inline code comments
 
 Read in the code to be processed from a provided filename or from stdin. Read in the user’s GTP_API_KEY from an environment variable.
 
+Find all defined functions that are not part of a docstring.
 For each function, construct a Codex prompt consisting of all the code up to and including that function, followed by:
 
 ```
@@ -60,27 +61,36 @@ def main():
         print("GPT_API_KEY environment variable not set")
         sys.exit(1)
 
-    functions = re.findall(r"def (.*?)\(", code)
-    print(functions)
+    # Find all functions that are not part of a docstring
+    functions = re.findall(r'^\s*def\s+(\w+)\s*\(.*\):', code, re.MULTILINE)
     for function in functions:
-        print(function)
-        code_before_function = code[:code.index(function)]
-        prompt = code_before_function + "\n# With inline comments\ndef " + function + "(arguments):\n    #\n"
-        data = json.dumps({
-            "prompt": prompt,
-            "max_tokens": 150,
-            "temperature": 0.7,
-            "stop": "Q:"
-        })
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer {}'.format(api_key)
-        }
-        response = requests.post('https://api.openai.com/v1/engines/davinci-codex/completions', headers=headers, data=data)
-        completion = response.json()["choices"][0]["text"]
-        code = code.replace(function + "(arguments):", completion)
+        print("Processing function {}".format(function))
+        code_before_function = re.search(r'^.*{}\('.format(function), code, re.MULTILINE).group(0)
+        prompt = code_before_function + '\n# With inline comments\n' + function + '('
+        response = requests.post('https://api.openai.com/v1/engines/davinci-codex/completions',
+            headers={
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer {}'.format(api_key)
+            },
+            data=json.dumps({
+                "prompt": prompt,
+                "max_tokens": 150,
+                "temperature": 0.7,
+                "stop": "Q:"
+            })
+        )
+        response_json = response.json()
+        if response.status_code != 200:
+            print("Error: {}".format(response_json))
+            sys.exit(1)
+        completion = response_json['choices'][0]['text']
+        completion = completion.replace('\n', '\n    ')
+        completion = completion.replace('Q:', '# Q:')
+        completion = completion.replace('\n    # With inline comments\n', '\n')
+        code = re.sub(r'^\s*def\s+{}\(.*\):'.format(function), completion, code, flags=re.MULTILINE)
 
-    print(code)
+    with open(filename + ".new", 'w') as f:
+        f.write(code)
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
