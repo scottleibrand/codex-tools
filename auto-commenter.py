@@ -6,12 +6,17 @@ Read in the code to be processed from a provided filename or from stdin. Read in
 
 For each function, construct a Codex prompt consisting of all the code up to and including that function, followed by:
 
+```
 # With inline comments
 def function_name(arguments):
     #
+```
+
 Use Temperature 0, with a Stop sequence of def, to make Codex stop after it finishes generating the commented function.
 
 Call the Codex API with the constructed prompt using the user’s GTP_API_KEY. API calls look like:
+
+```
     data = json.dumps({
         "prompt": prompt,
         "max_tokens": 150,
@@ -23,9 +28,12 @@ Call the Codex API with the constructed prompt using the user’s GTP_API_KEY. A
         'Authorization': 'Bearer {}'.format(GPT_API_KEY)
     }
     response = requests.post('https://api.openai.com/v1/engines/davinci-codex/completions', headers=headers, data=data)
+```
 
 The response is json that looks like:
+```
 {"id": "cmpl-3XmVTLK9jvbny8CNcUmSqT8BNc6MC", "object": "text_completion", "created": 1629180295, "model": "davinci:2020-05-03", "choices": [{"text": " It is because of the scattering of the molecules in the air that make up the atmosphere. They scatter blue light more than any other color, making the sky appear blue.\n", "index": 0, "logprobs": null, "finish_reason": "stop"}]}
+```
 
 Diff the generated function against the original, identify all the added comments, and inject them into the original code. (In most cases this will produce a commented function identical to the generated one, but we want to programmatically avoid introducing any changes to the original function other than adding comments.)
 
@@ -53,9 +61,11 @@ def main():
         sys.exit(1)
 
     functions = re.findall(r"def (.*?)\(", code)
+    print(functions)
     for function in functions:
+        print(function)
         code_before_function = code[:code.index(function)]
-        prompt = code_before_function + "\n# With inline comments\n" + function + "\n"
+        prompt = code_before_function + "\n# With inline comments\ndef " + function + "(arguments):\n    #\n"
         data = json.dumps({
             "prompt": prompt,
             "max_tokens": 150,
@@ -67,18 +77,8 @@ def main():
             'Authorization': 'Bearer {}'.format(api_key)
         }
         response = requests.post('https://api.openai.com/v1/engines/davinci-codex/completions', headers=headers, data=data)
-        result = response.json()
-        if "choices" not in result:
-            print("GPT-3 returned an error: {}".format(result))
-            sys.exit(1)
-        choices = result["choices"]
-        if len(choices) == 0:
-            print("GPT-3 returned no results")
-            sys.exit(1)
-        choice = choices[0]
-        code_after_function = code[code.index(function) + len(function):]
-        new_code = code_before_function + "\n" + choice["text"] + code_after_function
-        code = new_code
+        completion = response.json()["choices"][0]["text"]
+        code = code.replace(function + "(arguments):", completion)
 
     print(code)
 
