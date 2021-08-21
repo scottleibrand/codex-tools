@@ -1,0 +1,29 @@
+# Original
+
+def get_profiles(nightscout, token):
+    """
+    Get profiles available in nightscout
+    """
+    r_url = nightscout + "/api/v1/profile.json"
+    if token is not None:
+        r_url = r_url + "?" + token
+    r = requests.get(r_url)
+    return r.json()
+
+# With verbose inline comments
+
+def get_profiles(nightscout, token):
+    """
+    Get profiles available in nightscout
+    """
+    # Create the URL
+    r_url = nightscout + "/api/v1/profile.json"
+    # If token is not None, add it to the URL
+    if token is not None:
+        r_url = r_url + "?" + token
+    # Make the request
+    r = requests.get(r_url)
+    # Return the json
+    return r.json()
+
+# Original
