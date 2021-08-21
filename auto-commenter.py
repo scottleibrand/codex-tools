@@ -56,25 +56,38 @@ def read_code(filename):
     """
     Read code from a file or stdin and return it as a string
     """
+    # If filename is not None, open it for reading
     if filename:
         with open(filename, 'r') as f:
+            # Read the code from the file
             code = f.read()
+    # Otherwise read the code from stdin
     else:
         code = sys.stdin.read()
+    # Return the code
     return code
 
 def split_into_chunks(code):
     """
     Split code into chunks, each chunk being a function definition
     """
+    # Create an empty list to store chunks
     chunks = []
+    # Create a string to store the current chunk
     chunk = ''
+    # For each line in the code
     for line in code.splitlines():
+        # If the line is a function definition
         if re.match(r'^def ', line):
+            # Add the current chunk to the list of chunks
             chunks.append(chunk)
+            # And reset the current chunk
             chunk = ''
+        # Add the line to the current chunk
         chunk += line + '\n'
+    # Add the last chunk to the list of chunks
     chunks.append(chunk)
+    # Return the list of chunks
     return chunks
 
 def comment_chunk(chunk):
@@ -83,7 +96,7 @@ def comment_chunk(chunk):
     """
     prompt = open('autocomment-example.txt', 'r').read()
     prompt += '\n' + chunk + '\n# With verbose inline comments\n'
-    print(prompt)
+    #print(prompt)
     data = json.dumps({
         "prompt": prompt,
         "max_tokens": 1500,
@@ -102,29 +115,43 @@ def comment_code(code):
     """
     Comment code, given as a string.
     """
+    # Split code into chunks
     chunks = split_into_chunks(code)
+    # Comment each chunk
     commented_chunks = [comment_chunk(chunk) for chunk in chunks]
+    # Return the joined chunks
     return '\n'.join(commented_chunks)
 
 def comment_code_from_file(filename):
     """
     Comment code from a file, outputting to a .new file.
     """
+    # Read the code from the file
     code = read_code(filename)
+    # Comment the code
     commented_code = comment_code(code)
+    # Open the new file
     with open(filename + '.new', 'w') as f:
+        # Write the commented code to the file
         f.write(commented_code)
 
 def comment_code_from_stdin():
     """
     Comment code from stdin
     """
+    # Read code from stdin
     code = read_code(None)
+    # Comment code
     commented_code = comment_code(code)
+    # Print commented code
     print(commented_code)
 
 if __name__ == '__main__':
+    # If there is only one argument
     if len(sys.argv) == 1:
+        # Call the function to comment code from stdin
         comment_code_from_stdin()
+    # If there is more than one argument
     else:
+        # Call the function to comment code from file
         comment_code_from_file(sys.argv[1])
