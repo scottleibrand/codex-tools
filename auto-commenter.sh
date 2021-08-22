@@ -1,4 +1,12 @@
 #!/usr/bin/env bash
+
+# Check that $1 is a valid file that exists.
+# If not, print out a usage string and exit.
+if [ ! -f "$1" ]; then
+    echo "Usage: auto-commenter.sh filename"
+    exit 1
+fi
+
 # Process the filename provided in the first argument and convert it from a relative to an absolute path
 file=$(realpath $1)
 python3 auto-commenter.py $file
