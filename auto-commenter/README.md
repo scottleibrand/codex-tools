@@ -2,7 +2,7 @@
 
 ## Background
 
-One difficulty humans often have working with code is interpreting what it’s trying to do, or specifically how it’s intended to work. OpenAI Codex can be very easily prompted to add inline comments explaining what each section (or even line) of code is doing. Adding such comments improves the readability of the code, without requiring any additional work (or foresight) from the programmer. Such comments could easily be added to any existing code.
+One difficulty humans often have working with code is interpreting what it’s trying to do, or specifically how it’s intended to work. OpenAI Codex can be prompted to add inline comments explaining what each section (or even line) of code is doing. Adding such comments improves the readability of the code, without requiring any additional work (or foresight) from the programmer. With auto-commenter, Such comments can quickly and easily be added to any existing code.
 
 ## How it works
 
