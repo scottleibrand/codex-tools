@@ -48,6 +48,6 @@ The generated python code works exactly as described. In most cases auto-comment
 
 To avoid introducing such unwanted changes to the original function, I strung together some diff, grep, and patch commands to diff the generated function against the original, identify all the added comments, and patch them into the original code.
 
-[auto-commenter.sh](auto-commenter.sh) first runs [auto-commenter.py] to prompt OpenAI Codex add comments to $file. It then programmatically parses the resulting changes to keep only the added comments, to avoid introducing any other changes to the original function.
+[auto-commenter.sh](auto-commenter.sh) first runs [auto-commenter.py](auto-commenter.py) to prompt OpenAI Codex add comments to $file. It then programmatically parses the resulting changes to keep only the added comments, to avoid introducing any other changes to the original function.
 
 
