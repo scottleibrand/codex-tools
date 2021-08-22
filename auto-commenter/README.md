@@ -52,4 +52,26 @@ To avoid introducing such unwanted changes to the original function, I strung to
 
 [auto-commenter.sh](auto-commenter.sh) first runs [auto-commenter.py](auto-commenter.py) to prompt OpenAI Codex add comments to $file. It then programmatically parses the resulting changes to keep only the added comments, to avoid introducing any other changes to the original function.
 
+## Example output
 
+[auto-commenter.py](auto-commenter.py) itself is both the source code and its own example output. (The commit where I added add auto-commenter's comments about its own code is [here](https://github.com/scottleibrand/codex-tools/commit/2846c297c32096a66110924f39a54857842df72b).)
+
+Another example is [oref0/bin/get_profile.py](https://github.com/openaps/oref0/pull/1407/files).
+
+## How to run it
+
+You'll need to have an OpenAI Codex API key to be able to run auto-commenter yourself. You can learn more about Codex, and join the waitlist, [here](https://openai.com/blog/openai-codex/).
+
+If you'd like to see what auto-commenter does with open source code you're working on, I'll be happy to process it myself while you're waiting to get access to the beta. Tag me on Twitter [https://twitter.com/scottleibrand](@scottleibrand) with a link to the file you'd like processed, and I'll clone the repo, run auto-comment on it, and send you back the processed file.
+
+
+# What's next?
+
+First, I'd like to figure out whether this tool is something people would find valuable, get input on what you'd like to see from it, and find collaborators interested in working on this and similar tools.
+
+A few ideas for things we could do to improve auto-commenter:
+ - Test it out with languages other than Python, and tweak the prompt and/or script to work well with them.
+ - Make it easier to recursively process all the code in a directory.
+ - Figure out if it could be integrated into something like a Vim or IDE plugin to allow developers to auto-comment the code they're working on in real time.
+
+Eventually, I'd like to [go live](https://beta.openai.com/docs/going-live) with some sort of demo (like a web page where people can submit links to code on GitHub they'd like processed). As noted at the link, this requires thinking through potential abuse and scaling issues. In particular, OpenAI doesn't allow [open-ended summarizer implementations](https://beta.openai.com/docs/use-case-guidelines/summarization) "that end-users can submit any content they wish to".
