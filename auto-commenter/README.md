@@ -78,4 +78,4 @@ Eventually, I'd like to [go live](https://beta.openai.com/docs/going-live) with 
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE.md](../LICENSE.md) file for details.
+This project is licensed under the MIT License - see the [LICENSE](../LICENSE) file for details.
