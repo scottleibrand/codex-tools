@@ -75,3 +75,7 @@ A few ideas for things we could do to improve auto-commenter:
  - Figure out if it could be integrated into something like a Vim or IDE plugin to allow developers to auto-comment the code they're working on in real time.
 
 Eventually, I'd like to [go live](https://beta.openai.com/docs/going-live) with some sort of demo (like a web page where people can submit links to code on GitHub they'd like processed). As noted at the link, this requires thinking through potential abuse and scaling issues. In particular, OpenAI doesn't allow [open-ended summarizer implementations](https://beta.openai.com/docs/use-case-guidelines/summarization) "that end-users can submit any content they wish to".
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE.md](../LICENSE.md) file for details.
