@@ -6,7 +6,7 @@ One difficulty humans often have working with code is interpreting what it’s t
 
 ## How it works
 
-[auto-commenter.py](auto-commenter.py) is a script written with OpenAI codex prompted to autocomplete a script starting with the following docstring:
+[auto-commenter.py](auto-commenter.py) is a script written by OpenAI codex. I prompted it to autocomplete a script starting with the following docstring:
 
 ```
 #!/usr/bin/env python
