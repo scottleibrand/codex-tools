@@ -13,11 +13,13 @@ One difficulty humans often have working with code is interpreting what it’s t
 """
 Script to automatically add inline code comments
 
-Read in the code to be processed from a provided filename or from stdin. Read in the user’s GTP_API_KEY from an environment variable.
+Read in the code to be processed from a provided filename or from stdin. Read in the user’s GTP_API_KEY from an
+environment variable.
 
 Split out the preamble code before the first /^def / function definition.
 Split the code into chunks beginning with each /^def / function definition line.
-For each non-preamble chunk, construct a Codex prompt consisting of the contents of autocomment-example.txt followed by the code chunk and the line "# With verbose inline comments".
+For each non-preamble chunk, construct a Codex prompt consisting of the contents of autocomment-example.txt followed by
+the code chunk and the line "# With verbose inline comments".
 
  - Use Temperature 0, with a Stop sequence of "# Original", to make Codex stop after it finishes generating the commented code.
  - Call the Codex API with the constructed prompt using the user’s GTP_API_KEY. API calls look like:
