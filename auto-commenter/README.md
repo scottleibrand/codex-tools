@@ -73,6 +73,10 @@ A few ideas for things we could do to improve auto-commenter:
  - Test it out with languages other than Python, and tweak the prompt and/or script to work well with them.
  - Make it easier to recursively process all the code in a directory.
  - Figure out if it could be integrated into something like a Vim or IDE plugin to allow developers to auto-comment the code they're working on in real time.
+  - Figure out how to make it easy to run as a commit hook to automatically comment code as it's being committed.
+  - Make it work with [GitHub's Gists](https://developer.github.com/v3/gists/#create-a-gist).
+
+If you have specific suggestions, feel free to reach out on Twitter as described above, or or [open an issue](https://github.com/scottleibrand/codex-tools/issues) on GitHub. Or you can fork and pull request this project on GitHub: [https://github.com/scottleibrand/codex-tools](https://github.com/scottleibrand/codex-tools).
 
 Eventually, I'd like to [go live](https://beta.openai.com/docs/going-live) with some sort of demo (like a web page where people can submit links to code on GitHub they'd like processed). As noted at the link, this requires thinking through potential abuse and scaling issues. In particular, OpenAI doesn't allow [open-ended summarizer implementations](https://beta.openai.com/docs/use-case-guidelines/summarization) "that end-users can submit any content they wish to".
 
