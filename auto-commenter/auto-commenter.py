@@ -4,8 +4,8 @@ Script to automatically add inline code comments
 
 Read in the code to be processed from a provided filename or from stdin. Read in the user’s GTP_API_KEY from an environment variable.
 
-Split out the preamble code before the first /^def / function definition.
-Split the code into chunks beginning with each /^def / function definition line.
+Split out the preamble code before the first function definition, such as /^def / for python or /^\s*(public|private) / for java.
+Split the code into chunks beginning with each function definition line.
 For each non-preamble chunk, construct a Codex prompt consisting of the contents of autocomment-example.txt followed by the code chunk and the line "# With verbose inline comments".
 
  - Use Temperature 0, with a Stop sequence of "# Original", to make Codex stop after it finishes generating the commented code.
@@ -77,8 +77,8 @@ def split_into_chunks(code):
     chunk = ''
     # For each line in the code
     for line in code.splitlines():
-        # If the line is a function definition
-        if re.match(r'^def ', line):
+        # If the line is a python or java function definition
+        if re.match(r'^\s*(def|public|private)\s', line):
             # Add the current chunk to the list of chunks
             chunks.append(chunk)
             # And reset the current chunk
