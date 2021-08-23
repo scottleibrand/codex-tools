@@ -19,7 +19,10 @@ if [ ! -f "$1" ]; then
 fi
 
 # Process the filename provided in the first argument and convert it from a relative to an absolute path
-file=$(realpath $1)
+#file=$(realpath $1)
+# realpath doesn't exist on linux. Do it cross-platform.
+file=$(cd "$(dirname "$1")"; pwd)/$(basename "$1")
+
 # Run auto-commenter.py to prompt OpenAI Codex add comments to $file
 python3 auto-commenter.py $file
 # Write out a patch file containing all the changes Codex suggested
