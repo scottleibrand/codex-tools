@@ -6,9 +6,9 @@ Read in the code to be processed from a provided filename or from stdin. Read in
 
 Split out the preamble code before the first function definition, such as /^def / for python or /^\s*(public|private) / for java.
 Split the code into chunks beginning with each function definition line.
-For each non-preamble chunk, construct a Codex prompt consisting of the contents of autocomment-example.txt followed by the code chunk and the line "# With verbose inline comments".
+For each non-preamble chunk, construct a Codex prompt consisting of the contents of autocomment-example.txt followed by the code chunk and the line "Same function with verbose inline comments:".
 
- - Use Temperature 0, with a Stop sequence of "# Original", to make Codex stop after it finishes generating the commented code.
+ - Use Temperature 0, with a Stop sequence of "Original code:", to make Codex stop after it finishes generating the commented code.
 
  - Call the Codex API with the constructed prompt using the user’s GTP_API_KEY. API calls look like:
 
@@ -17,7 +17,7 @@ For each non-preamble chunk, construct a Codex prompt consisting of the contents
         "prompt": prompt,
         "max_tokens": 1500,
         "temperature": 0,
-        "stop": "# Original"
+        "stop": "Original code:"
     })
     headers = {
         'Content-Type': 'application/json',
@@ -95,13 +95,13 @@ def comment_chunk(chunk):
     Comment a single chunk of code
     """
     prompt = open('autocomment-example.txt', 'r').read()
-    prompt += '\n' + chunk + '\n# With verbose inline comments\n'
+    prompt += '\n' + chunk + '\nSame function with verbose inline comments:\n'
     #print(prompt)
     data = json.dumps({
         "prompt": prompt,
         "max_tokens": 1500,
         "temperature": 0,
-        "stop": "# Original"
+        "stop": "Original code:"
     })
     headers = {
         'Content-Type': 'application/json',

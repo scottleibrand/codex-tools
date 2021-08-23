@@ -1,4 +1,45 @@
-# Original
+Original code:
+
+    public List<Treatment> getCarbTreatments5MinBackFromHistory(long time) {
+        List<Treatment> in5minback = new ArrayList<>();
+        synchronized (treatments) {
+            for (Treatment t : treatments) {
+                if (!t.isValid)
+                    continue;
+                if (t.date <= time && t.date > time - 5 * 60 * 1000 && t.carbs > 0)
+                    in5minback.add(t);
+            }
+            return in5minback;
+        }
+    }
+
+Same code with verbose inline comments:
+
+    public List<Treatment> getCarbTreatments5MinBackFromHistory(long time) {
+        // Create a new list of treatments
+        List<Treatment> in5minback = new ArrayList<>();
+
+        // Acquire the lock to the treatments
+        synchronized (treatments) {
+            // Iterate over all treatments
+            for (Treatment t : treatments) {
+                // Check if the treatment is valid
+                if (!t.isValid)
+                    // If not, continue to the next treatment
+                    continue;
+
+                // Check if the treatment is in the 5 minute back from history window
+                if (t.date <= time && t.date > time - 5 * 60 * 1000 && t.carbs > 0)
+                    // If it is, add it to the list of treatments in 5 minutes back
+                    in5minback.add(t);
+            }
+
+            // Return the list of treatments in 5 minutes back
+            return in5minback;
+        }
+    }
+
+Original code:
 
 def get_profiles(nightscout, token):
     """
@@ -10,7 +51,7 @@ def get_profiles(nightscout, token):
     r = requests.get(r_url)
     return r.json()
 
-# With verbose inline comments
+Same code with verbose inline comments:
 
 def get_profiles(nightscout, token):
     """
@@ -26,4 +67,4 @@ def get_profiles(nightscout, token):
     # Return the json
     return r.json()
 
-# Original
+Original code:
