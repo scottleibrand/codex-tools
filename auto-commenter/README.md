@@ -70,11 +70,14 @@ If you'd like to see what auto-commenter does with open source code you're worki
 First, I'd like to figure out whether this tool is something people would find valuable, get input on what you'd like to see from it, and find collaborators interested in working on this and similar tools.
 
 A few ideas for things we could do to improve auto-commenter:
- - Test it out with languages other than Python, and tweak the prompt and/or script to work well with them.
- - Make it easier to recursively process all the code in a directory.
- - Figure out if it could be integrated into something like a Vim or IDE plugin to allow developers to auto-comment the code they're working on in real time.
+  - Test it out with languages other than Python, and tweak the prompt and/or script to work well with them.
+    - It now works with python and java: we'd need to tweak the chunking code to handle other languages.
+  - Make it easier to recursively process all the code in a directory.
+    - For now, you can do this like `find /path/to/process | egrep "\.py$" | while read file; do ./auto-commenter.sh $file; done` or similar
+  - Figure out if it could be integrated into something like a Vim or IDE plugin to allow developers to auto-comment the code they're working on in real time.
   - Figure out how to make it easy to run as a commit hook to automatically comment code as it's being committed.
   - Make it work with [GitHub's Gists](https://developer.github.com/v3/gists/#create-a-gist).
+  - Try cushman-codex instead of davinci-codex for faster (and eventually cheaper) operation. Will need to reduce prompt and chunk size to fit within cushman's 2k token limit vs. davinci's 4k.
 
 If you have specific suggestions, feel free to reach out on Twitter as described above, or or [open an issue](https://github.com/scottleibrand/codex-tools/issues) on GitHub. Or you can fork and pull request this project on GitHub: [https://github.com/scottleibrand/codex-tools](https://github.com/scottleibrand/codex-tools).
 
