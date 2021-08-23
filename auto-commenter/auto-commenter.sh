@@ -31,7 +31,12 @@ diff -U 0 $file $file.new > $file.patch
 head -2 $file.patch > $file.patch.new
 # Process the patch file to keep only added comments starting with whitespace and #.
 # Patch syntax like @@ -112,0 +127 @@ is what we want (the ,0 represents 0 lines removed/replaced).
+# Comment regex for # comments: "^\+\s+\#\s"
 # Keep only the first line after each such patch header that matches the comment regex.
-cat $file.patch | egrep -B1 "^\+\s+\#\s" | egrep -A1 "@@ -\d+,0 \+\d+ @@" | egrep "@@|^\+\s+\#\s" >> $file.patch.new
+# cat $file.patch | egrep -B1 "^\+\s+\#\s" | egrep -A1 "@@ -\d+,0 \+\d+ @@" | egrep "@@|^\+\s+\#\s" >> $file.patch.new
+# Comment regex for // comments: "^\+\s+//\s"
+# Comment regex for either # or // comments: "^\+\s+\#\s|^\+\s+//\s"
+# Keep only the first line after each such patch header that matches the comment regex for # or // comments.
+cat $file.patch | egrep -B1 "^\+\s+\#\s|^\+\s+//\s" | egrep -A1 "@@ -[0-9]+,0 \+[0-9]+ @@" | egrep "@@|^\+\s+\#\s|^\+\s+//\s" >> $file.patch.new
 # Apply the trimmed down patch to the original $file, to generate a $file.new containing only the added comments.
 patch $file $file.patch.new
