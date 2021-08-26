@@ -142,7 +142,8 @@ def get_code_chunks(code):
     """
     chunks = []
     for chunk in code.split('\n\n'):
-        if re.match(r'def ', chunk):
+        #print("Chunk:\n",chunk)
+        if re.match(r'\s*\n*def ', chunk):
             chunks.append(chunk)
     return chunks
 
@@ -228,8 +229,14 @@ def extract_function_code(code_chunk):
     # Remove the function definition line
     #print(code_chunk)
     function_code = re.sub(r'^\s*def .+\n', '', code_chunk)
-    # Remove the first docstring
+    # Split the function code by triple "s into a function chunks variable
+    function_chunks = re.split(r'\"\"\"', function_code)
+    # If the first chunk contains anything besides newlines and whitespace, return the function_code unchanged
+    if not re.match(r'^\s*$', function_chunks[0]):
+        print(function_chunks[0])
+        return function_code
     #print(function_code)
+    # Remove the first docstring
     function_code = re.sub(r'""".*?"""', '', function_code, 1, flags=re.DOTALL)
     #function_code = re.sub(r'\):\n*\s*""".*?"""', '\):\n', function_code, flags=re.DOTALL)
 
@@ -269,7 +276,7 @@ def main():
     chunks = get_code_chunks(code)
     for chunk in chunks:
         prompt = get_prompt(chunk)
-        print(prompt)
+        #print(prompt)
         try:
             response = get_response(prompt)
         except json.decoder.JSONDecodeError:
@@ -277,9 +284,9 @@ def main():
         # If the response is empty, continue to the next chunk
         if not response:
             continue
-        print("response:",response)
+        #print("response:",response)
         function_code = extract_function_code(chunk)
-        print("function_code:",function_code)
+        #print("function_code:",function_code)
         new_chunk = '\n'.join([
             response,
             function_code
