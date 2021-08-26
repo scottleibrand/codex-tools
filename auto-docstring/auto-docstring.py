@@ -11,7 +11,6 @@ For each non-preamble chunk:
   - the contents of autodocstring-example.txt
   - the code chunk
   - the line '#autodoc: A comprehensive PEP 257 Google style doctring, including a brief one-line summary of the function.'.
-  - the function definition line
   
  - Use Temperature 0, with a Stop sequence of "#autodoc", to make Codex stop after it finishes generating the docstring.
 
@@ -57,7 +56,6 @@ Functions called by main:
     - the contents of autodocstring-example.txt
     - the code chunk
     - the line '#autodoc: A comprehensive PEP 257 Google style doctring, including a brief one-line summary of the function.'.
-    - the function definition line
 
 - get_response
     Call the Codex API with the constructed prompt using the user’s GTP_API_KEY. API calls look like:
@@ -144,7 +142,7 @@ def get_code_chunks(code):
     """
     chunks = []
     for chunk in code.split('\n\n'):
-        if re.match(r'^\s+def ', chunk):
+        if re.match(r'def ', chunk):
             chunks.append(chunk)
     return chunks
 
@@ -154,7 +152,6 @@ def get_prompt(code_chunk):
     - the contents of autodocstring-example.txt
     - the code chunk
     - the line '#autodoc: A comprehensive PEP 257 Google style doctring, including a brief one-line summary of the function.'.
-    - the function definition line
 
     Parameters:
         code_chunk (str): A chunk of code.
@@ -163,11 +160,11 @@ def get_prompt(code_chunk):
         prompt (str): A prompt for the user.
 
     """
+    #print(code_chunk.split('\n')[0])
     prompt = '\n\n'.join([
         open('autodocstring-example.txt').read(),
         code_chunk,
         '#autodoc: A comprehensive PEP 257 Google style doctring, including a brief one-line summary of the function.',
-        code_chunk.split('\n')[0]
     ])
     return prompt
 
@@ -209,7 +206,12 @@ def get_response(prompt):
         'Authorization': 'Bearer {}'.format(GPT_API_KEY)
     }
     response = requests.post('https://api.openai.com/v1/engines/davinci-codex/completions', headers=headers, data=data)
-    return response.json()['choices'][0]['text']
+    try:
+        response = response.json()['choices'][0]['text']
+    except KeyError:
+        print(response.json(), file=sys.stderr)
+        #sys.exit(1)
+    return response
 
 
 def extract_function_code(code_chunk):
@@ -225,7 +227,7 @@ def extract_function_code(code_chunk):
     """
     # Remove the function definition line
     #print(code_chunk)
-    function_code = re.sub(r'^\s+def .+\n', '', code_chunk)
+    function_code = re.sub(r'^\s*def .+\n', '', code_chunk)
     # Remove the first docstring
     #print(function_code)
     function_code = re.sub(r'""".*?"""', '', function_code, 1, flags=re.DOTALL)
@@ -267,10 +269,17 @@ def main():
     chunks = get_code_chunks(code)
     for chunk in chunks:
         prompt = get_prompt(chunk)
-        response = get_response(prompt)
-        #print(response)
+        print(prompt)
+        try:
+            response = get_response(prompt)
+        except json.decoder.JSONDecodeError:
+            continue
+        # If the response is empty, continue to the next chunk
+        if not response:
+            continue
+        print("response:",response)
         function_code = extract_function_code(chunk)
-        #print(function_code)
+        print("function_code:",function_code)
         new_chunk = '\n'.join([
             response,
             function_code
@@ -278,7 +287,9 @@ def main():
         # Remove any repeated blank lines
         new_chunk = re.sub(r'\n+\s*\n+\s*\n+', '\n\n', new_chunk)
 
+        #print("new_chunk:",new_chunk)
         print(new_chunk)
+        #sys.exit()
         code = code.replace(chunk, new_chunk)
     output_code(code)
 
