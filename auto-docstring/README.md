@@ -1,27 +1,30 @@
-# Using OpenAI Codex to automatically add inline code comments
+# Using OpenAI Codex to automatically add docstrings to functions
 
 ## Background
 
-One difficulty humans often have working with code is interpreting what it’s trying to do, or specifically how it’s intended to work. OpenAI Codex can be prompted to add inline comments explaining what each section (or even line) of code is doing. Adding such comments improves the readability of the code, without requiring any additional work (or foresight) from the programmer. With auto-commenter, Such comments can quickly and easily be added to any existing code.
+One difficulty humans often have working with code is interpreting what it’s trying to do, or specifically how it’s intended to work. OpenAI Codex can be prompted to add summaries explaining what a given function of code does, what arguments it requires, and what it returns. For Python, those can be formatted as PEP 257 docstrings. Adding such docstrings programatically improves the readability of the code, without requiring any additional work (or foresight) from the programmer. With auto-docstring, such comments can quickly and easily be added to any existing Python code.
 
 ## How it works
 
-[auto-commenter.py](auto-commenter.py) is a script written by OpenAI codex. I prompted it to autocomplete a script starting with the following docstring:
+[auto-docstring.py](auto-docstring.py) is a script written with OpenAI codex. I prompted it to autocomplete a script starting with the following docstring:
 
 ```
 #!/usr/bin/env python
 """
-Script to automatically add inline code comments
+Script to automatically add PEP 257 Google style doctrings to Python code
 
-Read in the code to be processed from a provided filename or from stdin. Read in the user’s GTP_API_KEY from an
-environment variable.
+Read in the code to be processed from a provided filename or from stdin. Read in the user’s GTP_API_KEY from an environment variable.
 
-Split out the preamble code before the first /^def / function definition.
-Split the code into chunks beginning with each /^def / function definition line.
-For each non-preamble chunk, construct a Codex prompt consisting of the contents of autocomment-example.txt followed by
-the code chunk and the line "# With verbose inline comments".
+Split out the preamble code before the first function definition.
+Split the code into chunks beginning with each function definition line.
+For each non-preamble chunk:
+ - Construct a Codex prompt consisting of:
+  - the contents of autodocstring-example.txt
+  - the code chunk
+  - the line '#autodoc: A comprehensive PEP 257 Google style doctring, including a brief one-line summary of the function.'.
+  
+ - Use Temperature 0, with a Stop sequence of "#autodoc", to make Codex stop after it finishes generating the docstring.
 
- - Use Temperature 0, with a Stop sequence of "# Original", to make Codex stop after it finishes generating the commented code.
  - Call the Codex API with the constructed prompt using the user’s GTP_API_KEY. API calls look like:
 
     ```
@@ -29,7 +32,7 @@ the code chunk and the line "# With verbose inline comments".
         "prompt": prompt,
         "max_tokens": 1500,
         "temperature": 0,
-        "stop": "# Original"
+        "stop": "#autodoc"
     })
     headers = {
         'Content-Type': 'application/json',
@@ -40,44 +43,81 @@ the code chunk and the line "# With verbose inline comments".
 
     The response is json, and the output we want is in ['choices'][0]['text'].
 
- - Replace the original code chunk with the commented one, move on to the next chunk, and repeat the same process.
- 
- - If the script was called with a filename, output the commented code to a .new file. Otherwise output it to stdout.
+ - Format the response text as a docstring by:
+  - adding triple " quotes immediately before it without a trailing newline
+  - adding triple " quotes on a new line after it.
+ - Remove any existing docstring in the original function code.
+ - Replace the original function definition with the function definition line, the docstring, and the original function code.
+
+If the script was called with a filename, output the commented code to a .new file. Otherwise output it to stdout.
+
+Functions called by main:
+
+- get_api_key
+    Get the user’s GTP_API_KEY from the environment.
+
+- get_code
+    Read in the code to be processed from a provided filename or from stdin.
+
+- get_code_chunks
+    Split the code into chunks beginning with each function definition line.
+
+- get_prompt
+    Construct a Codex prompt consisting of:
+    - the contents of autodocstring-example.txt
+    - the code chunk
+    - the line '#autodoc: A comprehensive PEP 257 Google style doctring, including a brief one-line summary of the function.'.
+
+- get_response
+    Call the Codex API with the constructed prompt using the user’s GTP_API_KEY. API calls look like:
+
+    ```
+    data = json.dumps({
+        "prompt": prompt,
+        "max_tokens": 1500,
+        "temperature": 0,
+        "stop": "#autodoc"
+    })
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer {}'.format(GPT_API_KEY)
+    }
+    response = requests.post('https://api.openai.com/v1/engines/davinci-codex/completions', headers=headers, data=data)
+    ```
+
+    The response is json, and the output we want is in ['choices'][0]['text'].
+
+- extract_function_code
+    Returns only the code of the function, without the funciton definition line or the docstring
+
+- replace_function_definition
+    Replace the original function definition with the response and the original function code.
+
+- output_code
+    If the script was called with a filename, output the commented code to a .new file. Otherwise output it to stdout.
+
+- main
+    Call output_code with the processed code.
+
 """
 ```
 
-The generated python code works exactly as described. In most cases auto-commenter.py will produce a commented function identical to the generated one, but often Codex will decide the most likely completion is different from what was in the prompt in some way.
-
-To avoid introducing such unwanted changes to the original function, I strung together some diff, grep, and patch commands to diff the generated function against the original, identify all the added comments, and patch them into the original code.
-
-[auto-commenter.sh](auto-commenter.sh) first runs [auto-commenter.py](auto-commenter.py) to prompt OpenAI Codex add comments to $file. It then programmatically parses the resulting changes to keep only the added comments, to avoid introducing any other changes to the original function.
+Unlike auto-commenter.py (where output cleanup is done by auto-commenter.sh), I debugged and modified the auto-docstring code significantly to get it to directly provide the output I wanted.
 
 ## Example output
 
-[auto-commenter.py](auto-commenter.py) itself is both the source code and its own example output. (The commit where I added add auto-commenter's comments about its own code is [here](https://github.com/scottleibrand/codex-tools/commit/2846c297c32096a66110924f39a54857842df72b).)
-
-Another example is [oref0/bin/get_profile.py](https://github.com/openaps/oref0/pull/1407/files).
+The first example of [auto-docstring.py](auto-docs.py)'s output is on the [oref0 repo](https://github.com/openaps/oref0/pull/1408/files).
 
 ## How to run it
 
-You'll need to have an OpenAI Codex API key to be able to run auto-commenter yourself. You can learn more about Codex, and join the waitlist, [here](https://openai.com/blog/openai-codex/).
+You'll need to have an OpenAI Codex API key to be able to run auto-docstring yourself. You can learn more about Codex, and join the waitlist, [here](https://openai.com/blog/openai-codex/).
 
-If you'd like to see what auto-commenter does with open source code you're working on, I'll be happy to process it myself while you're waiting to get access to the beta. Tag me on Twitter [https://twitter.com/scottleibrand](@scottleibrand) with a link to the file you'd like processed, and I'll clone the repo, run auto-comment on it, and send you back the processed file.
+If you'd like to see what auto-docstring does with open source code you're working on, I'll be happy to process it myself while you're waiting to get access to the beta. Tag me on Twitter [https://twitter.com/scottleibrand](@scottleibrand) with a link to a specific file you'd like processed, and I'll clone the repo, run auto-comment on it, and send you back the processed file. If the output looks good and useful enough to PR, I can probably do entire directories or even repos as well.
 
 
 # What's next?
 
 First, I'd like to figure out whether this tool is something people would find valuable, get input on what you'd like to see from it, and find collaborators interested in working on this and similar tools.
-
-A few ideas for things we could do to improve auto-commenter:
-  - Test it out with languages other than Python, and tweak the prompt and/or script to work well with them.
-    - It now works with python and java: we'd need to tweak the chunking code to handle other languages.
-  - Make it easier to recursively process all the code in a directory.
-    - For now, you can do this like `find /path/to/process | egrep "\.py$" | while read file; do ./auto-commenter.sh $file; done` or similar
-  - Figure out if it could be integrated into something like a Vim or IDE plugin to allow developers to auto-comment the code they're working on in real time.
-  - Figure out how to make it easy to run as a commit hook to automatically comment code as it's being committed.
-  - Make it work with [GitHub's Gists](https://developer.github.com/v3/gists/#create-a-gist).
-  - Try cushman-codex instead of davinci-codex for faster (and eventually cheaper) operation. Will need to reduce prompt and chunk size to fit within cushman's 2k token limit vs. davinci's 4k.
 
 If you have specific suggestions, feel free to reach out on Twitter as described above, or or [open an issue](https://github.com/scottleibrand/codex-tools/issues) on GitHub. Or you can fork and pull request this project on GitHub: [https://github.com/scottleibrand/codex-tools](https://github.com/scottleibrand/codex-tools).
 
