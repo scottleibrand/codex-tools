@@ -1,4 +1,4 @@
-# Original code:
+#autodoc: Original code:
 
 def profiles(nightscout, token):
     """
@@ -12,7 +12,7 @@ def profiles(nightscout, token):
     for profile in profile_list:
         print("\t" + profile)
 
-# A comprehensive PEP 257 Google style doctring, including a brief one-line summary of the function.
+#autodoc: A comprehensive PEP 257 Google style doctring, including a brief one-line summary of the function.
 
 def profiles(nightscout, token):
     """Print list of profiles available in nightscout
@@ -28,7 +28,7 @@ def profiles(nightscout, token):
         None
     """
 
-# Original code:
+#autodoc: Original code:
 
 def display(nightscout, token, profile_name, profile_format):
     profile = get_current_profile(nightscout, token, profile_name)
@@ -41,7 +41,7 @@ def display(nightscout, token, profile_name, profile_format):
     else:
         print(json.dumps(ns_to_oaps(profile), indent=4))
 
-# A comprehensive PEP 257 Google style doctring, including a brief one-line summary of the function.
+#autodoc: A comprehensive PEP 257 Google style doctring, including a brief one-line summary of the function.
 
 def display(nightscout, token, profile_name, profile_format):
     """Display contents of a profile, in requested format
@@ -57,3 +57,5 @@ def display(nightscout, token, profile_name, profile_format):
     Returns:
         None
     """
+
+#autodoc: Original code:
