@@ -4,8 +4,8 @@ Script to automatically add PEP 257 Google style doctrings to Python code
 
 Read in the code to be processed from a provided filename or from stdin. Read in the user’s GTP_API_KEY from an environment variable.
 
-Split out the preamble code before the first /^\s+def / function definition.
-Split the code into chunks beginning with each /^\s+def / function definition line.
+Split out the preamble code before the first function definition.
+Split the code into chunks beginning with each function definition line.
 For each non-preamble chunk:
  - Construct a Codex prompt consisting of:
   - the contents of autodocstring-example.txt
@@ -49,7 +49,7 @@ Functions called by main:
     Read in the code to be processed from a provided filename or from stdin.
 
 - get_code_chunks
-    Split the code into chunks beginning with each /^\s+def / function definition line.
+    Split the code into chunks beginning with each function definition line.
 
 - get_prompt
     Construct a Codex prompt consisting of:
@@ -131,20 +131,25 @@ def get_code():
 
 def get_code_chunks(code):
     """
-    Split the code into chunks beginning with each /^\s+def / function definition line.
+    Split the code into chunks beginning with each function definition line.
 
     Parameters:
         code (str): The code to be processed.
 
     Returns:
-        chunks (list): The code split into chunks beginning with each /^\s+def / function definition line.
+        chunks (list): The code split into chunks beginning with each function definition line.
 
     """
     chunks = []
     for chunk in code.split('\n\n'):
         #print("Chunk:\n",chunk)
         if re.match(r'\s*\n*def ', chunk):
-            chunks.append(chunk)
+        # If the function definition line is indented (starts with whitespace), skip it.
+            if re.match(r'\s+def ', chunk):
+                pass
+            else:
+                chunks.append(chunk)
+
     return chunks
 
 def get_prompt(code_chunk):
